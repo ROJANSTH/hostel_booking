@@ -48,12 +48,14 @@ class AuthUserModel {
   final String fullName;
   final String email;
   final String phoneNumber;
+  final String? profilePicture;
 
   const AuthUserModel({
     this.id,
     required this.fullName,
     required this.email,
     required this.phoneNumber,
+    this.profilePicture,
   });
 
   factory AuthUserModel.fromJson(Map<String, dynamic> json) => AuthUserModel(
@@ -61,6 +63,7 @@ class AuthUserModel {
         fullName: json['fullName']?.toString() ?? '',
         email: json['email']?.toString() ?? '',
         phoneNumber: json['phoneNumber']?.toString() ?? '',
+        profilePicture: json['profilePicture']?.toString(),
       );
 
   AuthEntity toEntity({String password = ''}) => AuthEntity(
@@ -69,6 +72,7 @@ class AuthUserModel {
         email: email,
         password: password,
         phone: phoneNumber,
+        profilePicture: profilePicture,
       );
 }
 

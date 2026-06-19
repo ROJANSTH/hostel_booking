@@ -30,6 +30,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(authViewModelProvider).user;
+
     return Scaffold(
       backgroundColor: const Color(0xFFEEF2FF),
       appBar: AppBar(
@@ -37,6 +39,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         title: const Text(
           'HostelBooking',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: CircleAvatar(
+            backgroundColor: Colors.white24,
+            backgroundImage: user?.profilePicture != null && user!.profilePicture!.isNotEmpty
+                ? NetworkImage(user.profilePicture!)
+                : null,
+            child: user?.profilePicture == null || user!.profilePicture!.isEmpty
+                ? Text(
+                    user?.name.isNotEmpty == true
+                        ? user!.name[0].toUpperCase()
+                        : 'U',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : null,
+          ),
         ),
         actions: [
           IconButton(

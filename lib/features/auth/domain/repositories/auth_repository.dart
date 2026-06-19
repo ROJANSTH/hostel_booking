@@ -6,4 +6,5 @@ abstract class IAuthRepository {
   Future<Either<Failure, bool>> register(AuthEntity entity);
   Future<Either<Failure, AuthEntity>> login(String email, String password);
   Future<Either<Failure, bool>> logout(String email);
+  Future<Either<Failure, String>> uploadProfilePicture(String filePath);
 }

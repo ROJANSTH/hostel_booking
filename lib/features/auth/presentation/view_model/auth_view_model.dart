@@ -9,6 +9,7 @@ import 'package:hostel_booking/features/auth/domain/repositories/auth_repository
 import 'package:hostel_booking/features/auth/domain/usecases/login_usecase.dart';
 import 'package:hostel_booking/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:hostel_booking/features/auth/domain/usecases/register_usecase.dart';
+import 'package:hostel_booking/features/auth/domain/usecases/upload_profile_picture_usecase.dart';
 import 'package:hostel_booking/features/auth/presentation/view_model/auth_state.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
@@ -40,12 +41,17 @@ final logoutUseCaseProvider = Provider<LogoutUseCase>((ref) {
   return LogoutUseCase(repository: ref.read(authRepositoryProvider));
 });
 
+final uploadProfilePictureUseCaseProvider = Provider<UploadProfilePictureUseCase>((ref) {
+  return UploadProfilePictureUseCase(repository: ref.read(authRepositoryProvider));
+});
+
 final authViewModelProvider =
     StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(
     registerUseCase: ref.read(registerUseCaseProvider),
     loginUseCase: ref.read(loginUseCaseProvider),
     logoutUseCase: ref.read(logoutUseCaseProvider),
+    uploadProfilePictureUseCase: ref.read(uploadProfilePictureUseCaseProvider),
     storageService: ref.read(storageServiceProvider),
   );
 });
@@ -54,16 +60,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final RegisterUseCase _registerUseCase;
   final LoginUseCase _loginUseCase;
   final LogoutUseCase _logoutUseCase;
+  final UploadProfilePictureUseCase _uploadProfilePictureUseCase;
   final StorageService _storageService;
 
   AuthNotifier({
     required RegisterUseCase registerUseCase,
     required LoginUseCase loginUseCase,
     required LogoutUseCase logoutUseCase,
+    required UploadProfilePictureUseCase uploadProfilePictureUseCase,
     required StorageService storageService,
   })  : _registerUseCase = registerUseCase,
         _loginUseCase = loginUseCase,
         _logoutUseCase = logoutUseCase,
+        _uploadProfilePictureUseCase = uploadProfilePictureUseCase,
         _storageService = storageService,
         super(AuthState(user: storageService.getSavedUser()));
 
@@ -96,6 +105,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
       (failure) =>
           state = state.copyWith(isLoading: false, error: failure.message),
       (_) => state = const AuthState(),
+    );
+  }
+
+  Future<void> uploadProfilePicture(String filePath) async {
+    state = state.copyWith(isLoading: true, error: null);
+    final result = await _uploadProfilePictureUseCase(
+      UploadProfilePictureParams(filePath: filePath),
+    );
+    result.fold(
+      (failure) =>
+          state = state.copyWith(isLoading: false, error: failure.message),
+      (imageUrl) {
+        if (state.user != null) {
+          final updatedUser = state.user!.copyWith(profilePicture: imageUrl);
+          state = state.copyWith(isLoading: false, user: updatedUser, isSuccess: true);
+        } else {
+          state = state.copyWith(isLoading: false);
+        }
+      },
     );
   }
 

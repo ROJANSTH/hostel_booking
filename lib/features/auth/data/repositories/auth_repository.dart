@@ -55,4 +55,21 @@ class AuthRepositoryImpl implements IAuthRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, String>> uploadProfilePicture(String filePath) async {
+    try {
+      final token = _storageService.getToken();
+      if (token == null || token.isEmpty) {
+        return Left(const ServerFailure('Authentication token not found'));
+      }
+      final imageUrl = await _apiDataSource.uploadProfilePicture(filePath, token);
+      await _storageService.saveProfilePicture(imageUrl);
+      return Right(imageUrl);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

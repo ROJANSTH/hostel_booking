@@ -21,7 +21,13 @@ class StorageService {
       _prefs.setString(AppConstants.userNameKey, user.fullName),
       _prefs.setString(AppConstants.userEmailKey, user.email),
       _prefs.setString(AppConstants.userPhoneKey, user.phoneNumber),
+      if (user.profilePicture != null)
+        _prefs.setString(AppConstants.userProfilePictureKey, user.profilePicture!),
     ]);
+  }
+
+  Future<void> saveProfilePicture(String imageUrl) async {
+    await _prefs.setString(AppConstants.userProfilePictureKey, imageUrl);
   }
 
   AuthEntity? getSavedUser() {
@@ -34,6 +40,7 @@ class StorageService {
       email: email,
       password: '',
       phone: _prefs.getString(AppConstants.userPhoneKey) ?? '',
+      profilePicture: _prefs.getString(AppConstants.userProfilePictureKey),
     );
   }
 
@@ -49,6 +56,7 @@ class StorageService {
       _prefs.remove(AppConstants.userNameKey),
       _prefs.remove(AppConstants.userEmailKey),
       _prefs.remove(AppConstants.userPhoneKey),
+      _prefs.remove(AppConstants.userProfilePictureKey),
     ]);
   }
 }
