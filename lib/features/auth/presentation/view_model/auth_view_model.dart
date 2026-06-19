@@ -1,21 +1,31 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hostel_booking/core/services/hive/hive_service.dart';
-import 'package:hostel_booking/features/auth/data/datasources/local/auth_local_datasource.dart';
+import 'package:hostel_booking/core/api/api_client.dart';
+import 'package:hostel_booking/core/providers/shared_prefs_provider.dart';
+import 'package:hostel_booking/core/services/storage/storage_service.dart';
+import 'package:hostel_booking/features/auth/data/datasources/remote/auth_api_datasource.dart';
 import 'package:hostel_booking/features/auth/data/repositories/auth_repository.dart';
 import 'package:hostel_booking/features/auth/domain/entities/auth_entity.dart';
+import 'package:hostel_booking/features/auth/domain/repositories/auth_repository.dart';
 import 'package:hostel_booking/features/auth/domain/usecases/login_usecase.dart';
 import 'package:hostel_booking/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:hostel_booking/features/auth/domain/usecases/register_usecase.dart';
 import 'package:hostel_booking/features/auth/presentation/view_model/auth_state.dart';
 
-final hiveServiceProvider = Provider<HiveService>((ref) => HiveService());
+final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 
-final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
-  return AuthLocalDataSource(hiveService: ref.read(hiveServiceProvider));
+final storageServiceProvider = Provider<StorageService>((ref) {
+  return StorageService(prefs: ref.read(sharedPreferencesProvider));
 });
 
-final authRepositoryProvider = Provider<AuthRepositoryImpl>((ref) {
-  return AuthRepositoryImpl(dataSource: ref.read(authLocalDataSourceProvider));
+final authApiDataSourceProvider = Provider<IAuthApiDataSource>((ref) {
+  return AuthApiDataSource(apiClient: ref.read(apiClientProvider));
+});
+
+final authRepositoryProvider = Provider<IAuthRepository>((ref) {
+  return AuthRepositoryImpl(
+    apiDataSource: ref.read(authApiDataSourceProvider),
+    storageService: ref.read(storageServiceProvider),
+  );
 });
 
 final registerUseCaseProvider = Provider<RegisterUseCase>((ref) {
@@ -36,6 +46,7 @@ final authViewModelProvider =
     registerUseCase: ref.read(registerUseCaseProvider),
     loginUseCase: ref.read(loginUseCaseProvider),
     logoutUseCase: ref.read(logoutUseCaseProvider),
+    storageService: ref.read(storageServiceProvider),
   );
 });
 
@@ -43,15 +54,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final RegisterUseCase _registerUseCase;
   final LoginUseCase _loginUseCase;
   final LogoutUseCase _logoutUseCase;
+  final StorageService _storageService;
 
   AuthNotifier({
     required RegisterUseCase registerUseCase,
     required LoginUseCase loginUseCase,
     required LogoutUseCase logoutUseCase,
+    required StorageService storageService,
   })  : _registerUseCase = registerUseCase,
         _loginUseCase = loginUseCase,
         _logoutUseCase = logoutUseCase,
-        super(const AuthState());
+        _storageService = storageService,
+        super(AuthState(user: storageService.getSavedUser()));
 
   Future<void> register(AuthEntity entity) async {
     state = state.copyWith(isLoading: true, error: null);
@@ -85,5 +99,5 @@ class AuthNotifier extends StateNotifier<AuthState> {
     );
   }
 
-  void resetState() => state = const AuthState();
+  void resetState() => state = AuthState(user: _storageService.getSavedUser());
 }

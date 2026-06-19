@@ -6,3 +6,7 @@ abstract class Failure {
 class LocalFailure extends Failure {
   const LocalFailure(super.message);
 }
+
+class ServerFailure extends Failure {
+  const ServerFailure(super.message);
+}
