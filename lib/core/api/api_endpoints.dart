@@ -5,7 +5,7 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   // Set true when running on a physical phone
-  static const bool isPhysicalDevice = true;
+  static const bool isPhysicalDevice = false;
 
   // Your laptop IPv4 address
   static const String compIpAddress = '192.168.254.7';
